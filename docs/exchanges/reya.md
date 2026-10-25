@@ -73,6 +73,8 @@ The connector clamps free collateral at zero and subtracts its own conservative 
 
 Missing or stale required position risk data independently withholds order budget, even when a balance refresh succeeds. Stale prices or failed margin reads also withhold budget. This budget is not a withdrawal amount or a guaranteed order-size quote. Transfers and withdrawals are not implemented.
 
+The proposed position stream can publish valuation updates without a new execution. Price-only updates leave a still-fresh budget usable until REST reconciliation; position changes, unavailable risk, cash or execution events, and stream failures withhold budget immediately. Reconciliation runs at most once every five seconds, including periodic checks while the stream is healthy. Responses started before an invalidating event cannot restore freshness. These stream changes remain part of the undeployed API proposal, and valuation messages do not create trade fills.
+
 ### Settlement, Fees and Funding
 
 Matching is provisional on Reya. The connector reports fills from settled executions rather than matched order quantities, and reconciles execution busts. Orders remain tracked until their terminal settlement state is reconciled.
