@@ -37,7 +37,7 @@ The draft `connect reya_perpetual` flow uses these fields:
 !!! warning "Credential QA remains pending"
     The connector verifies account ownership through the account summary and derives the signer address from the configured private key. It accepts the owner's signer or checks a delegate against `enabledApiWallets` from Reya's read-only `GET /api/trading/wallet/{address}/apiWalletStatus` endpoint, comparing addresses case-insensitively. Missing keys, malformed permission responses and failed permission reads reject validation. This check submits no order and makes no direct RPC call. Valid and invalid credential flows still require devnet QA.
 
-Restore Hummingbot's saved order tracking state after a restart. The draft connector withholds new order budget when it finds untracked open orders, and it does not automatically resubmit an order whose outcome is uncertain.
+Restore Hummingbot's saved order tracking state after a restart. As a conservative local policy, the draft connector withholds new order budget when it finds untracked open orders. It does not automatically resubmit an order whose outcome is uncertain.
 
 ## 🔀 Perp Connector
 
@@ -67,7 +67,11 @@ Only one-way positions with cross margin are implemented. Hedge mode and isolate
 
 The connector depends on the new `GET /v2/wallet/{address}/accountSummaries` endpoint and additional risk fields on the existing `GET /v2/wallet/{address}/positions` endpoint proposed in [API spec PR #119](https://github.com/Reya-Labs/reya-api-specs/pull/119). Both changes must be deployed before the connector can use the margin and position valuations for trading.
 
-Balances represent account-level margin value in RUSD after collateral haircuts. Available budget uses free collateral from the server, clamped at zero, with additional reservations for tracked orders until settlement reconciliation completes. Missing or stale required position risk data independently withholds order budget, even when a balance refresh succeeds. Stale prices or failed margin reads also withhold budget. This budget is not a withdrawal amount or a guaranteed order-size quote. Transfers and withdrawals are not implemented.
+Balances represent account-level margin value in RUSD after collateral haircuts. Reya currently does not reserve or consume margin for resting orders; the API's `freeCollateral` reflects that venue model.
+
+The connector clamps free collateral at zero and subtracts its own conservative reservations for tracked orders until settlement reconciliation completes. Those reservations and the budget freeze for untracked open orders are local connector policies. They do not represent exchange-held margin or a missing API field. Resting orders are distinct from matched executions awaiting settlement, which the connector reconciles as described below.
+
+Missing or stale required position risk data independently withholds order budget, even when a balance refresh succeeds. Stale prices or failed margin reads also withhold budget. This budget is not a withdrawal amount or a guaranteed order-size quote. Transfers and withdrawals are not implemented.
 
 ### Settlement, Fees and Funding
 
