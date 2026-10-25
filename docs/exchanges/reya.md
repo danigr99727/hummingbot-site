@@ -67,9 +67,9 @@ Only one-way positions with cross margin are implemented. Hedge mode and isolate
 
 The connector depends on the new `GET /v2/wallet/{address}/accountSummaries` endpoint and additional risk fields on the existing `GET /v2/wallet/{address}/positions` endpoint proposed in [API spec PR #119](https://github.com/Reya-Labs/reya-api-specs/pull/119). Both changes must be deployed before the connector can use the margin and position valuations for trading.
 
-Balances represent account-level margin value in RUSD after collateral haircuts. Reya currently does not reserve or consume margin for resting orders; the API's `freeCollateral` reflects that venue model.
+Balances represent account-level margin value in RUSD after collateral haircuts.
 
-The connector clamps free collateral at zero and subtracts its own conservative reservations for tracked orders until settlement reconciliation completes. Those reservations and the budget freeze for untracked open orders are local connector policies. They do not represent exchange-held margin or a missing API field. Resting orders are distinct from matched executions awaiting settlement, which the connector reconciles as described below.
+The connector clamps free collateral at zero and applies conservative local reservations for tracked orders until settlement reconciliation completes. Untracked open orders withhold new order budget until reconciled. Execution settlement is described below.
 
 Missing or stale required position risk data independently withholds order budget, even when a balance refresh succeeds. Stale prices or failed margin reads also withhold budget. This budget is not a withdrawal amount or a guaranteed order-size quote. Transfers and withdrawals are not implemented.
 
