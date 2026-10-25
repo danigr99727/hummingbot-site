@@ -1,7 +1,7 @@
 # Reya (proposed connector)
 
 !!! warning "Proposed — not available in a Hummingbot release"
-    This page describes the draft `reya_perpetual` connector in [Hummingbot PR #8509](https://github.com/hummingbot/hummingbot/pull/8509). It is not an announcement of supported trading. Deployment of the proposed risk API, signer-authorization validation, devnet lifecycle QA, and connector admission and maintenance arrangements remain pending.
+    This page describes the draft `reya_perpetual` connector in [Hummingbot PR #8509](https://github.com/hummingbot/hummingbot/pull/8509). It is not an announcement of supported trading. Deployment of the proposed risk API, devnet credential and lifecycle QA, and connector admission and maintenance arrangements remain pending.
 
 ## 🛠 Connector Info
 
@@ -34,8 +34,8 @@ The draft `connect reya_perpetual` flow uses these fields:
 | `reya_perpetual_wallet_address` | Owner wallet address, which may differ from the signer address |
 | `reya_perpetual_account_id` | Perpetual account ID belonging to that owner |
 
-!!! warning "Signer validation is pending"
-    Balance and risk reads are public. A successful account lookup does not establish that the configured signer is authorized to trade. Reya already provides a legacy read-only permission route, `GET /api/trading/wallet/{address}/apiWalletStatus`. The connector still needs an evaluated integration with that route or a clean v2 equivalent, including account ownership checks. Signer validation remains a release and QA blocker; a live order must not be used as a credential check.
+!!! warning "Credential QA remains pending"
+    The connector verifies account ownership through the account summary and derives the signer address from the configured private key. It accepts the owner's signer or checks a delegate against `enabledApiWallets` from Reya's read-only `GET /api/trading/wallet/{address}/apiWalletStatus` endpoint, comparing addresses case-insensitively. Missing keys, malformed permission responses and failed permission reads reject validation. This check submits no order and makes no direct RPC call. Valid and invalid credential flows still require devnet QA.
 
 Restore Hummingbot's saved order tracking state after a restart. The draft connector withholds new order budget when it finds untracked open orders, and it does not automatically resubmit an order whose outcome is uncertain.
 
@@ -80,7 +80,7 @@ Fee budgets use the account's fee tier without discounts; settled executions sup
 Before this connector can be listed as available:
 
 - Deploy the account summaries endpoint and enriched positions response, and validate their integration.
-- Validate the configured signer's authorization and account ownership through an evaluated legacy permission read or a v2 equivalent; public balance reads are insufficient.
+- Verify owner, delegate and invalid credential cases on devnet, including permission-read failures.
 - Enable a devnet validation path and complete signed create, cancel, partial-fill, execution-bust, reconnect and restart QA with a dedicated account. The current draft has no devnet selector, and signed lifecycle validation remains pending.
 - Complete Hummingbot's [perpetual connector developer checklist](https://hummingbot.org/connectors/connectors/perp-connector-checklist/), [QA checklist](https://hummingbot.org/connectors/connectors/test-perp/) and [connector admission and maintenance process](https://hummingbot.org/connectors/connectors/).
 
